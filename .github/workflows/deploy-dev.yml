@@ -15,6 +15,7 @@ jobs:
           echo "Workflow is running from: ${{ github.ref }}"
 
           echo "version file is $(cat version)"
+          echo "app file is $(cat app.txt)"
           
           # You can use the SOURCE variable for further processing
           # For example:
