@@ -5,12 +5,17 @@ on:
     branches:
       - main  # or any branch you want to trigger this action
 
+permissions:
+  contents: write  # This gives the GITHUB_TOKEN permission to modify repository contents
+
 jobs:
   update-version-and-tag:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Fetch all history for all tags and branches
 
       - name: Read and update version
         id: version
@@ -31,7 +36,7 @@ jobs:
           echo "$new_version" > version
           
           # Set output for later steps
-          echo "::set-output name=new_version::$new_version"
+          echo "new_version=$new_version" >> $GITHUB_OUTPUT
 
       - name: Commit updated version file
         run: |
