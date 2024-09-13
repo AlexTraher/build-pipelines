@@ -1,0 +1,46 @@
+name: Manual Tag Selection
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Select a tag'
+        required: true
+        type: choice
+        options: ${{ steps.get-tags.outputs.tag_list }}
+
+jobs:
+  get-tags:
+    runs-on: ubuntu-latest
+    outputs:
+      tag_list: ${{ steps.set-tags.outputs.tag_list }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - name: Get and set available tags
+        id: set-tags
+        run: |
+          tags=$(git tag --sort=-creatordate | jq -R -s -c 'split("\n")[:-1]')
+          echo "tag_list=$tags" >> $GITHUB_OUTPUT
+
+  process-selected-tag:
+    needs: get-tags
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - name: Process selected tag
+        run: |
+          echo "Selected tag: ${{ github.event.inputs.tag }}"
+          git checkout ${{ github.event.inputs.tag }}
+          # Add your tag processing logic here
+          # For example:
+          # - Run tests
+          # - Build artifacts
+          # - Deploy to a specific environment
