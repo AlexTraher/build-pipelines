@@ -13,18 +13,6 @@ jobs:
       - name: Log workflow source
         run: |
           echo "Workflow is running from: ${{ github.ref }}"
-          
-          # Extract the tag or branch name from github.ref
-          if [[ ${{ github.ref }} == refs/tags/* ]]; then
-            SOURCE="${{ github.ref#refs/tags/ }}"
-            echo "Workflow is running from tag: $SOURCE"
-          elif [[ ${{ github.ref }} == refs/heads/* ]]; then
-            SOURCE="${{ github.ref#refs/heads/ }}"
-            echo "Workflow is running from branch: $SOURCE"
-          else
-            SOURCE="${{ github.ref }}"
-            echo "Workflow is running from: $SOURCE"
-          fi
 
           echo "version file is $(cat version)"
           
