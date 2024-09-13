@@ -1,4 +1,4 @@
-name: Deploy to dev
+name: Deploy to UAT
 
 on:
   workflow_dispatch:
@@ -16,4 +16,4 @@ jobs:
 
           echo "version file is $(cat version)"
           echo "app file is $(cat app.txt)"
-          echo "deploying to development"
+          echo "deploying to UAT"
