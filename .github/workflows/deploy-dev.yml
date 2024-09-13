@@ -1,63 +1,35 @@
-name: Manual Tag Selection
+name: Log Workflow Source
 
 on:
   workflow_dispatch:
-    inputs:
-      tag:
-        description: 'Select a tag'
-        required: true
-        type: choice
-        options: ['placeholder']  # This will be replaced dynamically
 
 jobs:
-  select-tag:
+  log-workflow-source:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v2
-        with:
-          fetch-depth: 0
+        uses: actions/checkout@v4
 
-      - name: Get available tags
-        id: get-tags
+      - name: Log workflow source
         run: |
-          tags=$(git tag --sort=-creatordate | jq -R -s -c 'split("\n")[:-1]')
-          echo "tags=$tags" >> $GITHUB_OUTPUT
-
-      - name: Generate workflow file with dynamic tags
-        run: |
-          # Read the current workflow file
-          workflow_content=$(cat .github/workflows/manual-tag-selection.yml)
+          echo "Workflow is running from: ${{ github.ref }}"
           
-          # Replace the placeholder options with actual tags
-          updated_content=$(echo "$workflow_content" | sed "s/options: \['placeholder'\]/options: ${{ steps.get-tags.outputs.tags }}/")
+          # Extract the tag or branch name from github.ref
+          if [[ ${{ github.ref }} == refs/tags/* ]]; then
+            SOURCE="${{ github.ref#refs/tags/ }}"
+            echo "Workflow is running from tag: $SOURCE"
+          elif [[ ${{ github.ref }} == refs/heads/* ]]; then
+            SOURCE="${{ github.ref#refs/heads/ }}"
+            echo "Workflow is running from branch: $SOURCE"
+          else
+            SOURCE="${{ github.ref }}"
+            echo "Workflow is running from: $SOURCE"
+          fi
+
+          echo "version file is $(cat version)"
           
-          # Write the updated content back to the file
-          echo "$updated_content" > .github/workflows/manual-tag-selection.yml
-
-      - name: Commit and push updated workflow
-        run: |
-          git config user.name github-actions
-          git config user.email github-actions@github.com
-          git add .github/workflows/manual-tag-selection.yml
-          git commit -m "Update tag options in workflow"
-          git push
-
-  process-selected-tag:
-    needs: select-tag
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
-        with:
-          fetch-depth: 0
-
-      - name: Process selected tag
-        run: |
-          echo "Selected tag: ${{ github.event.inputs.tag }}"
-          git checkout ${{ github.event.inputs.tag }}
-          # Add your tag processing logic here
+          # You can use the SOURCE variable for further processing
           # For example:
-          # - Run tests
-          # - Build artifacts
-          # - Deploy to a specific environment
+          # - Run specific tests based on the tag/branch
+          # - Deploy to different environments based on the tag/branch
+          # - Generate reports or artifacts specific to the tag/branch
