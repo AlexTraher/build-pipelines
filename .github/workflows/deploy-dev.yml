@@ -7,27 +7,44 @@ on:
         description: 'Select a tag'
         required: true
         type: choice
-        options: ${{ steps.get-tags.outputs.tag_list }}
+        options: ['placeholder']  # This will be replaced dynamically
 
 jobs:
-  get-tags:
+  select-tag:
     runs-on: ubuntu-latest
-    outputs:
-      tag_list: ${{ steps.set-tags.outputs.tag_list }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
         with:
           fetch-depth: 0
 
-      - name: Get and set available tags
-        id: set-tags
+      - name: Get available tags
+        id: get-tags
         run: |
           tags=$(git tag --sort=-creatordate | jq -R -s -c 'split("\n")[:-1]')
-          echo "tag_list=$tags" >> $GITHUB_OUTPUT
+          echo "tags=$tags" >> $GITHUB_OUTPUT
+
+      - name: Generate workflow file with dynamic tags
+        run: |
+          # Read the current workflow file
+          workflow_content=$(cat .github/workflows/manual-tag-selection.yml)
+          
+          # Replace the placeholder options with actual tags
+          updated_content=$(echo "$workflow_content" | sed "s/options: \['placeholder'\]/options: ${{ steps.get-tags.outputs.tags }}/")
+          
+          # Write the updated content back to the file
+          echo "$updated_content" > .github/workflows/manual-tag-selection.yml
+
+      - name: Commit and push updated workflow
+        run: |
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          git add .github/workflows/manual-tag-selection.yml
+          git commit -m "Update tag options in workflow"
+          git push
 
   process-selected-tag:
-    needs: get-tags
+    needs: select-tag
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
